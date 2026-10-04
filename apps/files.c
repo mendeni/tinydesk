@@ -33,7 +33,7 @@ static int s_count;
 static td_window_t *s_win;
 static td_widget_t *s_list, *s_path_label;
 static char s_cwd[PATH_MAX_];
-static char s_item[NAME_MAX_ + 24];
+static char s_item[NAME_MAX_ + 56];
 static char s_target[NAME_MAX_];      /* entry a dialog is about */
 static bool s_target_dir;
 
@@ -162,6 +162,7 @@ static const char *get_item(td_widget_t *w, int index, int *fg, void *user)
     (void)w;
     (void)user;
     const entry_t *e = &s_entries[index];
+    char name[NAME_MAX_ + 32]; /* the name column: 32 cells, padded by code points */
     if (e->is_dir)
     {
         *fg = td_theme()->accent == 1 ? 11 : td_theme()->accent;
@@ -170,11 +171,13 @@ static const char *get_item(td_widget_t *w, int index, int *fg, void *user)
     else if (td_is_script(e->name))
     {
         *fg = td_script_colour(td_theme()->input_bg);   /* shell scripts stand out */
-        snprintf(s_item, sizeof(s_item), "%-32s %8u  #!", e->name, (unsigned)e->size);
+        td_utf8_pad(name, sizeof(name), e->name, 32);
+        snprintf(s_item, sizeof(s_item), "%s %8u  #!", name, (unsigned)e->size);
     }
     else
     {
-        snprintf(s_item, sizeof(s_item), "%-32s %8u", e->name, (unsigned)e->size);
+        td_utf8_pad(name, sizeof(name), e->name, 32);
+        snprintf(s_item, sizeof(s_item), "%s %8u", name, (unsigned)e->size);
     }
     return s_item;
 }

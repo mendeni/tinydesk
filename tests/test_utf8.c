@@ -74,10 +74,74 @@ static void test_stream(void)
     CHECK_EQ(out[0], 0xFFFD);
 }
 
+/* td_utf8_pad(): `cols` cells as the screen counts them. */
+static void test_pad(void)
+{
+    char out[64];
+
+    /* ASCII: padded, and cut at `cols`. */
+    CHECK_EQ(td_utf8_pad(out, sizeof(out), "abc", 6), 6);
+    CHECK(strcmp(out, "abc   ") == 0);
+    CHECK_EQ(td_utf8_pad(out, sizeof(out), "abcdefgh", 5), 5);
+    CHECK(strcmp(out, "abcde") == 0);
+    CHECK_EQ(td_utf8_pad(out, sizeof(out), NULL, 3), 3);
+    CHECK(strcmp(out, "   ") == 0);
+    CHECK_EQ(td_utf8_pad(out, sizeof(out), "abc", 0), 0);
+    CHECK(out[0] == '\0');
+
+    /* 2-, 3- and 4-byte characters are one cell each. */
+    CHECK_EQ(td_utf8_pad(out, sizeof(out), "caf\xC3\xA9", 6), 7); /* café + 2 spaces */
+    CHECK(strcmp(out, "caf\xC3\xA9  ") == 0);
+    CHECK_EQ(td_utf8_len(out), 6);
+    CHECK_EQ(td_utf8_pad(out, sizeof(out), "\xE4\xB8\xAD\xE6\x96\x87", 4), 8); /* 中文 */
+    CHECK(strcmp(out, "\xE4\xB8\xAD\xE6\x96\x87  ") == 0);
+    CHECK_EQ(td_utf8_pad(out, sizeof(out), "a\xF0\x9F\x98\x80"
+                                           "b",
+                         3),
+             6); /* a😀b */
+    CHECK(strcmp(out, "a\xF0\x9F\x98\x80"
+                      "b") == 0);
+
+    /* Truncation stops at a character boundary. */
+    CHECK_EQ(td_utf8_pad(out, sizeof(out), "\xE4\xB8\xAD\xE6\x96\x87xyz", 1), 3);
+    CHECK(strcmp(out, "\xE4\xB8\xAD") == 0);
+    CHECK_EQ(td_utf8_pad(out, sizeof(out), "ab\xE2\x98\x95", 2), 2);
+    CHECK(strcmp(out, "ab") == 0);
+
+    /* Invalid bytes are one cell each, as td_utf8_next() reads them, and
+     * are copied as they are: the copy draws the same cells. */
+    static const char bad[] = "\xFF"
+                              "a\xC3"
+                              "b\xE4\xB8"; /* stray, cut-short 2- and 3-byte */
+    int n = td_utf8_pad(out, sizeof(out), bad, 8);
+    CHECK_EQ(n, (int)strlen(bad) + 2);
+    CHECK(memcmp(out, bad, strlen(bad)) == 0);
+    CHECK_EQ(td_utf8_len(bad), 6);
+    CHECK_EQ(td_utf8_len(out), 8);
+    CHECK_EQ(td_utf8_pad(out, sizeof(out), bad, 3), 3);
+    CHECK(memcmp(out, "\xFF"
+                      "a\xC3",
+                 3) == 0 &&
+          out[3] == '\0');
+    CHECK_EQ(td_utf8_len(out), 3);
+
+    /* A buffer too small: whole characters only, always NUL-terminated. */
+    CHECK_EQ(td_utf8_pad(out, 4, "\xE4\xB8\xAD\xE6\x96\x87", 4), 3);
+    CHECK(strcmp(out, "\xE4\xB8\xAD") == 0);
+    CHECK_EQ(td_utf8_pad(out, 3, "\xE4\xB8\xAD", 4), 2); /* no room for 中: spaces */
+    CHECK(strcmp(out, "  ") == 0);
+    CHECK_EQ(td_utf8_pad(out, 1, "abc", 4), 0);
+    CHECK(out[0] == '\0');
+    out[0] = 'x';
+    CHECK_EQ(td_utf8_pad(out, 0, "abc", 4), 0);
+    CHECK(out[0] == 'x'); /* cap 0: nothing written */
+}
+
 int main(void)
 {
     test_encode();
     test_decode_string();
     test_stream();
+    test_pad();
     return TD_TEST_RESULT();
 }

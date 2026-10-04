@@ -22,7 +22,7 @@ static td_widget_t *s_srv_label[2], *s_srv_button[2];
 static td_wifi_ap_t s_aps[AP_MAX];
 static int s_ap_count;
 static bool s_scanning;
-static char s_item[80];
+static char s_item[128]; /* SSID column: up to 32 bytes + padding, then bars and state */
 static char s_target[33];
 
 static const td_net_ops_t *net(void)
@@ -50,7 +50,10 @@ static const char *get_item(td_widget_t *w, int index, int *fg, void *user)
     bool current = st.wifi_up && strcmp(st.ssid, ap->ssid) == 0;
     if (current)
         *fg = td_theme()->accent;
-    snprintf(s_item, sizeof(s_item), "%-32.32s %s %-7s %s", ap->ssid, bars(ap->rssi),
+    /* The SSID is arbitrary bytes; pad it by cells, as the list draws it. */
+    char ssid[80];
+    td_utf8_pad(ssid, sizeof(ssid), ap->ssid, 32);
+    snprintf(s_item, sizeof(s_item), "%s %s %-7s %s", ssid, bars(ap->rssi),
              ap->secure ? "secured" : "open", current ? "connected" : ap->saved ? "saved"
                                                                                 : "");
     return s_item;

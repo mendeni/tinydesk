@@ -3,6 +3,8 @@
  */
 #include "tinydesk/td_screen.h"
 
+#include <string.h>
+
 #define REPLACEMENT 0xFFFDu
 
 int td_utf8_encode(uint32_t cp, uint8_t out[4])
@@ -112,6 +114,35 @@ int td_utf8_len(const char *s)
     while (td_utf8_next(&s) != 0)
         n++;
     return n;
+}
+
+int td_utf8_pad(char *out, size_t cap, const char *s, int cols)
+{
+    if (!out || cap == 0)
+        return 0;
+    size_t n = 0;
+    int used = 0;
+    /* Copy whole code points as td_utf8_next() reads them (a malformed byte
+     * is one cell on its own), so the copy draws the same cells. */
+    while (s && used < cols)
+    {
+        const char *start = s;
+        if (td_utf8_next(&s) == 0)
+            break;
+        size_t len = (size_t)(s - start);
+        if (n + len >= cap)
+            break;
+        memcpy(out + n, start, len);
+        n += len;
+        used++;
+    }
+    while (used < cols && n + 1 < cap)
+    {
+        out[n++] = ' ';
+        used++;
+    }
+    out[n] = '\0';
+    return (int)n;
 }
 
 /* Start a new sequence with byte; returns 1 if it completed at once. */

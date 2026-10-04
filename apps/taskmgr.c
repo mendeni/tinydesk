@@ -26,7 +26,7 @@ typedef struct
     int cpu_tenths;             /* whole system, -1 unknown */
     td_window_t *wins[WINS_MAX];
     int win_count;
-    char item[96];
+    char item[128];
     char note[64];
 } tm_t;
 
@@ -100,7 +100,9 @@ static const char *app_item(td_widget_t *w, int i, int *fg, void *user)
     bool hidden = (win->flags & TD_WIN_HIDDEN) != 0;
     if (hidden)
         *fg = td_theme()->dim;
-    snprintf(T->item, sizeof(T->item), " %s %-40.40s %s", win->icon ? win->icon : "  ", win->title,   /* glyphs: 2 columns */
+    char title[TD_TITLE_MAX + 40]; /* 40 cells, padded by code points */
+    td_utf8_pad(title, sizeof(title), win->title, 40);
+    snprintf(T->item, sizeof(T->item), " %s %s %s", win->icon ? win->icon : "  ", title, /* glyphs: 2 columns */
              win == td_win_focused() ? "active" : hidden ? "minimised"
                                                          : "open");
     return T->item;

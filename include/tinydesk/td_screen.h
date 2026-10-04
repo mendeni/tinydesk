@@ -139,6 +139,16 @@ uint32_t td_utf8_next(const char **s);
 /* Number of code points in a NUL-terminated UTF-8 string. */
 int td_utf8_len(const char *s);
 
+/* A column of exactly `cols` cells for a list or table: copies `s` (NULL
+ * counts as "") into `out`, at most `cols` code points and never part of
+ * one, then pads with spaces to `cols` code points. Code points are counted
+ * as the screen draws them (td_utf8_next(): a malformed byte is one cell),
+ * so strings that are not valid UTF-8 line up too. Stops early when `out`
+ * is full; always NUL-terminates when cap > 0. Returns the bytes written,
+ * without the NUL. Double-width characters (CJK, emoji) count as one cell,
+ * as everywhere in TinyDesk. */
+int td_utf8_pad(char *out, size_t cap, const char *s, int cols);
+
 /* Streaming decoder for byte-at-a-time input. */
 typedef struct
 {
