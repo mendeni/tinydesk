@@ -10,8 +10,18 @@ revision when reporting a problem.
    (ESP-IDF 5.3.1). Code in `ports/esp_idf` is shared by all three.
 4. Describe what changed for users (and the API) in the pull request, so the documentation
    and the changelog can follow.
-5. Format the C files you change with clang-format 16: `clang-format -i` with the repository's `.clang-format`
-   (one way to get it: `pip install clang-format==16.0.6`).
+5. Set up formatting once:
+
+   ```bash
+   pip install pre-commit
+   pre-commit install
+   ```
+
+   After this, every commit formats the C files you changed with the right
+   clang-format version automatically. To format manually instead:
+   `pip install clang-format==16.0.6`, then `clang-format -i <files>`. If the
+   format check fails on your pull request, don't worry: I can fix it before
+   merging.
 6. Keep your own board out of it: pins go in `ports/*/board.conf` (ignored by git),
    never in code. New hardware keys go, commented out, into both `board.example.conf` files.
 
