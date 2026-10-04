@@ -203,7 +203,21 @@ static int term_write(void *ctx, const void *data, size_t len)
     return 0;
 }
 
-static const tdsh_terminal_io_t s_term_io = {NULL, term_read_byte, term_write};
+/* The Terminal window's width, for the line editor (set by the UI thread
+ * from start() and resize(), read by the shell thread). */
+static volatile int s_cols;
+
+static int term_columns(void *ctx)
+{
+    (void)ctx;
+    return s_cols;
+}
+
+static const tdsh_terminal_io_t s_term_io = {
+    .read_byte = term_read_byte,
+    .write_bytes = term_write,
+    .columns = term_columns,
+};
 
 /* ------------------------------------------------------ shell thread */
 
@@ -332,8 +346,8 @@ static bool s_started;
 static int backend_start(void *ctx, int cols, int rows)
 {
     (void)ctx;
-    (void)cols;
     (void)rows;
+    s_cols = cols;
     if (s_started)
         return 0;
     pipe_init(&s_in);
@@ -365,11 +379,19 @@ static int backend_write(void *ctx, const uint8_t *buf, int len)
     return s_started ? pipe_try_write(&s_in, buf, len) : 0;
 }
 
+static void backend_resize(void *ctx, int cols, int rows)
+{
+    (void)ctx;
+    (void)rows;
+    s_cols = cols;
+}
+
 static const td_term_backend_t s_backend = {
     .name = "tdsh",
     .start = backend_start,
     .read = backend_read,
     .write = backend_write,
+    .resize = backend_resize,
 };
 
 const td_term_backend_t *td_tdsh_host_backend(const char *fs_root, const char *hostname)

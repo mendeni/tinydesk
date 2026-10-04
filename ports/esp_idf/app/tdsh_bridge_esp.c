@@ -120,13 +120,30 @@ bool tdsh_bridge_break_requested(void)
 
 /* ------------------------------------------------------- backend */
 
+/* The Terminal window's width, for the shell's line editor (set by the UI
+ * task from start() and resize(), read by the shell task). */
+static volatile int s_cols;
+
+static int console_columns(void)
+{
+    return s_cols;
+}
+
+static void backend_resize(void *ctx, int cols, int rows)
+{
+    (void)ctx;
+    (void)rows;
+    s_cols = cols;
+}
+
 static int backend_start(void *ctx, int cols, int rows)
 {
     (void)ctx;
-    (void)cols;
     (void)rows;
+    s_cols = cols;
     if (s_started)
         return 0;
+    tdsh_espidf_set_console_columns(console_columns);
     s_in = xStreamBufferCreate(IN_BUFFER, 1);
     s_out = xStreamBufferCreate(OUT_BUFFER, 1);
     s_out_lock = xSemaphoreCreateMutex();
@@ -178,6 +195,7 @@ static const td_term_backend_t s_backend = {
     .start = backend_start,
     .read = backend_read,
     .write = backend_write,
+    .resize = backend_resize,
     .user = backend_user,
     .set_user = backend_set_user,
 };
