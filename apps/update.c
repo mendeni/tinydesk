@@ -52,31 +52,34 @@ static bool is_url(const char *s)
     return !strncmp(s, "http://", 7) || !strncmp(s, "https://", 8);
 }
 
-static void start(bool check_only)
+static bool start(bool check_only)
 {
     if (!ota() || !allowed())
-        return;
+        return false;
     const char *text = td_widget_text(s_source);
     char real[200];
     const char *src = text;
     if (!text[0] || !strcmp(text, "https://"))
     {
         note("Type a URL (http:// or https://) or a .bin file, or check for official updates.");
-        return;
+        return false;
     }
     if (!is_url(text))
     {
         if (!td_session_real_path(text, real, sizeof(real)))
         {
             note("That file is outside your home folder.");
-            return;
+            return false;
         }
         src = real;
     }
     if (!ota()->start(src, check_only))
+    {
         note("An update is already running.");
-    else
-        s_note[0] = '\0';
+        return false;
+    }
+    s_note[0] = '\0';
+    return true;
 }
 
 static void on_check(td_widget_t *w, void *user)
@@ -85,10 +88,48 @@ static void on_check(td_widget_t *w, void *user)
     (void)user;
     start(true);
 }
+
+/* Save and install | Install anyway | Cancel */
+static void install_answer(int button, void *user)
+{
+    (void)user;
+    if (button == 0)
+    {
+        char msg[96];
+        if (!ota()->save_settings(msg, (int)sizeof(msg)))
+        {
+            note(msg);
+            return;
+        }
+        if (start(false))
+            note(msg);
+    }
+    else if (button == 1)
+    {
+        start(false);
+    }
+}
+
 static void on_install(td_widget_t *w, void *user)
 {
     (void)w;
     (void)user;
+    /* Pins built into this firmware only would be lost by firmware built
+     * without them (an official release): offer to save them first. */
+    int unsaved = ota() && allowed() && ota()->unsaved_settings && ota()->save_settings ? ota()->unsaved_settings() : 0;
+    if (unsaved > 0)
+    {
+        char text[320];
+        snprintf(text, sizeof(text),
+                 "%d board setting%s (pins) %s built into the\n"
+                 "firmware this board runs. Firmware built without\n"
+                 "them, such as an official release, starts without\n"
+                 "them: no Ethernet, SD card or RS-485 until they are\n"
+                 "set again. Save them on the board first?",
+                 unsaved, unsaved == 1 ? "" : "s", unsaved == 1 ? "is" : "are");
+        td_msgbox("Software Update", text, "Save and install|Install anyway|Cancel", install_answer, NULL);
+        return;
+    }
     start(false);
 }
 static void on_enter(td_widget_t *w, void *user)

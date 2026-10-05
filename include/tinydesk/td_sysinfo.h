@@ -167,6 +167,15 @@ typedef struct
     /* The version the user was last told about, so each is told once. */
     void (*notified)(char *out, int cap);
     void (*set_notified)(const char *version);
+
+    /* Board settings (pins) that only the running firmware has, built in
+     * from its board.conf (optional, NULL: none). Firmware built without
+     * them, such as an official release, would start without them, so
+     * Software Update offers to save them before it installs.
+     * unsaved_settings counts them; save_settings writes them to the device
+     * (false on failure) and describes the outcome in msg. */
+    int (*unsaved_settings)(void);
+    bool (*save_settings)(char *msg, int cap);
 } td_ota_ops_t;
 
 /* One system task (thread), for the Task Manager. */

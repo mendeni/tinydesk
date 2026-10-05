@@ -627,6 +627,27 @@ static void ota_set_notified(const char *version)
     nvs_close(h);
 }
 
+/* Board settings that only the running firmware has (built in from a
+ * board.conf). Official images are built without any, so installing one
+ * would start without them: Software Update and `ota install` offer to save
+ * them on the board first (`board save`). */
+static int ota_unsaved_settings(void)
+{
+    return tdsh_board_unsaved();
+}
+
+static bool ota_save_settings(char *msg, int cap)
+{
+    int n = tdsh_board_save_builtin();
+    if (n < 0)
+    {
+        snprintf(msg, (size_t)cap, "Cannot save the board settings: %s", strerror(-n));
+        return false;
+    }
+    snprintf(msg, (size_t)cap, "Saved %d board setting%s in /etc/board.conf.", n, n == 1 ? "" : "s");
+    return true;
+}
+
 static const td_ota_ops_t s_ops = {
     .info = ota_info,
     .start = ota_start,
@@ -640,6 +661,8 @@ static const td_ota_ops_t s_ops = {
     .set_auto_check = ota_set_auto_check,
     .notified = ota_notified,
     .set_notified = ota_set_notified,
+    .unsaved_settings = ota_unsaved_settings,
+    .save_settings = ota_save_settings,
 };
 
 /* A restart we were asked for (Start > Exit, `reboot`, Restart now) means
@@ -722,10 +745,21 @@ static int cmd_ota(tdsh_session_t *session, int argc, char **argv)
             printf("Last:      %s\n", st.message);
         return 0;
     }
-    if ((!strcmp(op, "check") || !strcmp(op, "install")) && argc == 3)
+    bool force = !strcmp(op, "install") && argc == 4 && !strcmp(argv[2], "-f");
+    if ((!strcmp(op, "check") || !strcmp(op, "install")) && (argc == 3 || force))
     {
         char real[200];
-        const char *src = argv[2];
+        const char *src = argv[argc - 1];
+        int unsaved = ota_unsaved_settings();
+        if (!strcmp(op, "install") && !force && unsaved > 0)
+        {
+            printf("ota: %d board setting%s (pins) %s built into this firmware only: firmware\n"
+                   "built without them, such as an official release, starts without them.\n"
+                   "Save them on the board first with `board save`, or install anyway with\n"
+                   "`ota install -f %s`.\n",
+                   unsaved, unsaved == 1 ? "" : "s", unsaved == 1 ? "is" : "are", src);
+            return 1;
+        }
         if (!is_url(src))
         {
             if (tdsh_path_to_real(session, src, real, sizeof(real), NULL, 0) != 0)
@@ -810,7 +844,8 @@ static int cmd_ota(tdsh_session_t *session, int argc, char **argv)
            "  ota official                  look up the newest official release\n"
            "  ota notify [on|off]           daily check and notice (on: tell again)\n"
            "  ota check <url|file>          show the version of an update\n"
-           "  ota install <url|file>        install it (then: ota restart)\n"
+           "  ota install [-f] <url|file>   install it (then: ota restart); -f: even with\n"
+           "                                board settings that only this firmware has\n"
            "  ota cancel | restart | rollback\n"
            "url: http://... or https://... to a TinyDesk .bin; file: a .bin on this device.\n");
     return 2;
