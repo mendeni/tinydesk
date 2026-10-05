@@ -176,6 +176,67 @@ static void test_drag_and_drop(void)
     td_desktop_set_provider(NULL);
 }
 
+/* Desktop icon labels split by characters, not bytes. */
+static int utf8_count(void *u)
+{
+    (void)u;
+    return 2;
+}
+static const char *utf8_label(int i, void *u)
+{
+    (void)u;
+    return i == 0 ? "caf\xC3\xA9 cr\xC3\xA8me br\xC3\xBBl\xC3\xA9"
+                    "e" /* café crème brûlée */
+                  : "\xE4\xB8\xAD\xE6\x96\x87\xE4\xB8\xAD\xE6\x96\x87\xE4\xB8\xAD\xE6\x96\x87\xE4\xB8\xAD"
+                    "\xE6\x96\x87\xE4\xB8\xAD\xE6\x96\x87\xE4\xB8\xAD\xE6\x96\x87\xE4\xB8\xAD\xE6\x96\x87"; /* 中文 x 7 */
+}
+static const td_desktop_provider_t s_utf8_prov = {.count = utf8_count, .label = utf8_label};
+
+/* First row from y0 on which the code points of `text` appear in a row, or -1. */
+static int find_text_from(const td_buffer_t *b, const char *text, int y0)
+{
+    uint32_t want[32];
+    int n = 0;
+    while (n < 32 && (want[n] = td_utf8_next(&text)) != 0)
+        n++;
+    for (int y = y0; y < b->rows; y++)
+        for (int x = 0; x + n <= b->cols; x++)
+        {
+            int k = 0;
+            while (k < n && td_buffer_cell((td_buffer_t *)b, x + k, y)->ch == want[k])
+                k++;
+            if (k == n)
+                return y;
+        }
+    return -1;
+}
+
+static int find_text(const td_buffer_t *b, const char *text)
+{
+    return find_text_from(b, text, 0);
+}
+
+static void test_icon_labels_utf8(void)
+{
+    static td_buffer_t back;
+    td_wm_init(80, 25);
+    td_desktop_set_provider(&s_utf8_prov);
+    td_wm_compose(&back);
+    /* 11 columns a line: "café crème" / "brûlée" break at the space ... */
+    int y1 = find_text(&back, "caf\xC3\xA9 cr\xC3\xA8me");
+    int y2 = find_text(&back, "br\xC3\xBBl\xC3\xA9"
+                              "e");
+    CHECK(y1 >= 0 && y2 == y1 + 1);
+    /* ... 14 CJK characters without a space split 11 + 3, whole. */
+    int c1 = find_text(&back, "\xE4\xB8\xAD\xE6\x96\x87\xE4\xB8\xAD\xE6\x96\x87\xE4\xB8\xAD\xE6\x96\x87\xE4\xB8\xAD"
+                              "\xE6\x96\x87\xE4\xB8\xAD\xE6\x96\x87\xE4\xB8\xAD");
+    int c2 = find_text_from(&back, "\xE6\x96\x87\xE4\xB8\xAD\xE6\x96\x87", c1 + 1); /* also inside line 1 */
+    CHECK(c1 >= 0 && c2 == c1 + 1);
+    /* No character was cut in half anywhere. */
+    CHECK_EQ(find_text(&back, "\xEF\xBF\xBD"), -1);
+    td_desktop_set_provider(NULL);
+}
+
 static void test_icons_and_hover(void)
 {
     static td_buffer_t back;
@@ -303,6 +364,7 @@ int main(void)
     CHECK_EQ(back.cols, 80);
 
     test_icons_and_hover();
+    test_icon_labels_utf8();
     test_drag_and_drop();
     return TD_TEST_RESULT();
 }

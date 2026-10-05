@@ -7,6 +7,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <string.h>
 
 #include "tinydesk/td.h"
@@ -99,7 +100,7 @@ static uintptr_t s_hover_id;
  * gap. */
 static const int s_icon_slot_w[3] = {21, 12, 16};
 static const int s_icon_slot_h[3] = {1, 6, 7};
-#define ICON_LABEL_MAX 24
+#define ICON_LABEL_MAX 64 /* a label line: up to 15 columns, up to 4 bytes each */
 static int icon_count(void);
 static td_ui_size_t icon_eff(void);
 static int icon_w(void)
@@ -334,7 +335,7 @@ td_window_t *td_win_create(const td_window_desc_t *desc)
     memset(w, 0, sizeof(*w));
     w->used = true;
     w->id = (uint8_t)idx;
-    snprintf(w->title, sizeof(w->title), "%s", desc->title ? desc->title : "");
+    td_utf8_copy(w->title, sizeof(w->title), desc->title ? desc->title : "", INT_MAX); /* whole characters */
     w->flags = desc->flags;
     w->min_w = desc->min_w > 0 ? desc->min_w : 16;
     w->min_h = desc->min_h > 0 ? desc->min_h : 4;
@@ -448,7 +449,7 @@ void td_win_set_title(td_window_t *win, const char *title)
 {
     if (!td_win_is_open(win))
         return;
-    snprintf(win->title, sizeof(win->title), "%s", title ? title : "");
+    td_utf8_copy(win->title, sizeof(win->title), title ? title : "", INT_MAX); /* whole characters */
     s_dirty = true;
 }
 
@@ -1354,34 +1355,42 @@ static int icon_at(int x, int y)
     return -1;
 }
 
-/* Split an app name into at most two label lines of icon_w() - 1 columns,
- * breaking at a space ("System Monitor" -> "System" / "Monitor"). */
+/* Split an app or file name into at most two label lines of icon_w() - 1
+ * columns, breaking at a space ("System Monitor" -> "System" / "Monitor").
+ * Columns are code points, as the screen draws them; a character is never
+ * cut in half. */
 static void icon_label(const char *name, char *l1, char *l2, size_t cap)
 {
     const int max = icon_w() - 1;
     l2[0] = '\0';
-    size_t len = strlen(name);
-    if ((int)len <= max)
+    if (td_utf8_len(name) <= max)
     {
-        if (len >= cap)
-            len = cap - 1;
-        memcpy(l1, name, len);
-        l1[len] = '\0';
+        td_utf8_copy(l1, cap, name, INT_MAX);
         return;
     }
-    const char *space = NULL;
-    for (const char *p = name; *p && p - name <= max; p++)
-        if (*p == ' ')
-            space = p;
+    const char *space = NULL, *p = name;
+    int space_at = 0;
+    for (int i = 0; i <= max; i++)
+    {
+        const char *at = p;
+        uint32_t cp = td_utf8_next(&p);
+        if (cp == 0)
+            break;
+        if (cp == ' ')
+        {
+            space = at;
+            space_at = i;
+        }
+    }
     if (space)
     {
-        snprintf(l1, cap, "%.*s", (int)(space - name), name);
-        snprintf(l2, cap, "%.*s", max, space + 1);
+        td_utf8_copy(l1, cap, name, space_at);
+        td_utf8_copy(l2, cap, space + 1, max);
     }
     else
     {
-        snprintf(l1, cap, "%.*s", max, name);
-        snprintf(l2, cap, "%.*s", max, name + max);
+        td_utf8_copy(l1, cap, name, max);
+        td_utf8_copy(l2, cap, td_utf8_skip(name, max), max);
     }
 }
 
@@ -1407,7 +1416,12 @@ static void draw_icon(int i)
     if (icon)
         snprintf(glyph, sizeof(glyph), "%s", icon);
     else
-        snprintf(glyph, sizeof(glyph), "%c ", name[0]);
+    {
+        /* The name's first character (whole, even if it is not ASCII) and a space. */
+        int n = td_utf8_copy(glyph, sizeof(glyph) - 1, name, 1);
+        glyph[n] = ' ';
+        glyph[n + 1] = '\0';
+    }
 
     uint8_t fg = t->icon_fg, bg = t->desktop_bg;
     if (hover || selected)
@@ -1445,7 +1459,7 @@ static void draw_icon(int i)
     if (large)
     {
         /* One wider label line (15 columns fit every app name). */
-        snprintf(l1, sizeof(l1), "%.*s", icon_w() - 1, name);
+        td_utf8_copy(l1, sizeof(l1), name, icon_w() - 1);
         draw_label_line(r.x, r.y + bh, l1, lfg, lbg, attr);
         return;
     }

@@ -313,8 +313,9 @@ static void do_delete(void)
 {
     if (!target_selected() || !fs()->remove)
         return;
-    char text[96];   /* the dialog shortens lines to fit */
-    snprintf(text, sizeof(text), "Delete %s%.24s%s?", s_target_dir ? "folder " : "", s_target,
+    char text[160], name[24 * 4 + 1]; /* the dialog shortens lines to fit */
+    td_utf8_copy(name, sizeof(name), s_target, 24); /* never half a character */
+    snprintf(text, sizeof(text), "Delete %s%s%s?", s_target_dir ? "folder " : "", name,
              s_target_dir ? " and\neverything in it" : "");
     td_msgbox("Confirm", text, "Delete|Cancel", delete_answer, NULL);
 }

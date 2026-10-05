@@ -149,6 +149,16 @@ int td_utf8_len(const char *s);
  * as everywhere in TinyDesk. */
 int td_utf8_pad(char *out, size_t cap, const char *s, int cols);
 
+/* Like td_utf8_pad() without the padding: copies at most `cols` code points
+ * of `s` (NULL counts as ""), never part of one, and stops early when `out`
+ * is full. To shorten text to fit a buffer, pass INT_MAX for `cols`. Always
+ * NUL-terminates when cap > 0; returns the bytes written. */
+int td_utf8_copy(char *out, size_t cap, const char *s, int cols);
+
+/* The part of `s` after its first `cols` code points (the end of the string
+ * if it is shorter), counted as td_utf8_next() does. */
+const char *td_utf8_skip(const char *s, int cols);
+
 /* Streaming decoder for byte-at-a-time input. */
 typedef struct
 {

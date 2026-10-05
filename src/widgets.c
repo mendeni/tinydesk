@@ -7,6 +7,7 @@
  */
 #include <stdarg.h>
 #include <stdio.h>
+#include <limits.h>
 #include <string.h>
 
 #include "tinydesk/td.h"
@@ -209,7 +210,7 @@ void td_widget_set_text(td_widget_t *w, const char *text)
 {
     if (!w)
         return;
-    snprintf(TXT(w), (size_t)CAP(w), "%.*s", CAP(w) - 1, text ? text : "");   /* cut to fit */
+    td_utf8_copy(TXT(w), (size_t)CAP(w), text, INT_MAX); /* cut to fit, never inside a character */
     if (w->type == TD_WT_TEXTBOX)
     {
         w->value = (int)strlen(TXT(w));   /* cursor to the end */

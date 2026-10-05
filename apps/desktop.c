@@ -270,9 +270,10 @@ static void delete_answer(int button, void *user)
 
 static void ask_delete(void)
 {
-    char text[96];   /* the dialog shortens lines to fit */
+    char text[160], name[24 * 4 + 1]; /* the dialog shortens lines to fit */
     bool dir = s_items[s_target].is_dir;
-    snprintf(text, sizeof(text), "Delete %s%.24s%s?", dir ? "folder " : "", s_target_name,
+    td_utf8_copy(name, sizeof(name), s_target_name, 24); /* never half a character */
+    snprintf(text, sizeof(text), "Delete %s%s%s?", dir ? "folder " : "", name,
              dir ? " and\neverything in it" : "");
     td_msgbox("Confirm", text, "Delete|Cancel", delete_answer, NULL);
 }

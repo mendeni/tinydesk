@@ -19,6 +19,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <string.h>
 
 #include "td_apps.h"
@@ -115,9 +116,11 @@ static const char *file_name(void)
 
 static void update_title(void)
 {
-    char title[TD_TITLE_MAX];
-    /* "*" + name + " - Editor": the name is cut to fit the title. */
-    snprintf(title, sizeof(title), "%s%.*s - Editor", E.modified ? "*" : "", (int)sizeof(title) - 11, file_name());
+    char title[TD_TITLE_MAX], name[TD_TITLE_MAX - 10];
+    /* "*" + name + " - Editor": the name is cut to fit the title, at a
+     * character boundary. */
+    td_utf8_copy(name, sizeof(name), file_name(), INT_MAX);
+    snprintf(title, sizeof(title), "%s%s - Editor", E.modified ? "*" : "", name);
     td_win_set_title(s_win, title);
 }
 
@@ -769,8 +772,9 @@ static bool on_close_request(td_window_t *win)
     (void)win;
     if (!E.modified)
         return true;
-    char text[TD_TEXT_MAX];
-    snprintf(text, sizeof(text), "Save changes to %.24s?", file_name());
+    char text[160], name[24 * 4 + 1];
+    td_utf8_copy(name, sizeof(name), file_name(), 24); /* 24 characters, never half of one */
+    snprintf(text, sizeof(text), "Save changes to %s?", name);
     td_msgbox("Editor", text, "Save|Discard|Cancel", unsaved_answer, NULL);
     return false;
 }

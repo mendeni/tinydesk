@@ -137,11 +137,36 @@ static void test_pad(void)
     CHECK(out[0] == 'x'); /* cap 0: nothing written */
 }
 
+/* td_utf8_copy() and td_utf8_skip(): cut and skip by code points. */
+static void test_copy_and_skip(void)
+{
+    char out[16];
+    /* At most `cols` characters, no padding. */
+    CHECK_EQ(td_utf8_copy(out, sizeof(out), "caf\xC3\xA9 au lait", 4), 5);
+    CHECK(strcmp(out, "caf\xC3\xA9") == 0);
+    CHECK_EQ(td_utf8_copy(out, sizeof(out), "ab", 10), 2);
+    CHECK(strcmp(out, "ab") == 0);
+    CHECK_EQ(td_utf8_copy(out, sizeof(out), NULL, 3), 0);
+    CHECK(out[0] == '\0');
+    /* Cut to fit the buffer, never inside a character: 5 x 3 bytes in 8. */
+    CHECK_EQ(td_utf8_copy(out, 8, "\xE4\xB8\xAD\xE6\x96\x87\xE4\xB8\xAD\xE6\x96\x87\xE4\xB8\xAD", 1000), 6);
+    CHECK(strcmp(out, "\xE4\xB8\xAD\xE6\x96\x87") == 0);
+
+    /* Skipping: by characters; past the end gives the end. */
+    const char *s = "\xC3\xA9t\xC3\xA9 x";
+    CHECK(td_utf8_skip(s, 0) == s);
+    CHECK(td_utf8_skip(s, 1) == s + 2);
+    CHECK(td_utf8_skip(s, 3) == s + 5);
+    CHECK(*td_utf8_skip(s, 99) == '\0');
+    CHECK(td_utf8_skip(NULL, 2) == NULL);
+}
+
 int main(void)
 {
     test_encode();
     test_decode_string();
     test_stream();
     test_pad();
+    test_copy_and_skip();
     return TD_TEST_RESULT();
 }

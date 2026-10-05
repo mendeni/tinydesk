@@ -116,15 +116,13 @@ int td_utf8_len(const char *s)
     return n;
 }
 
-int td_utf8_pad(char *out, size_t cap, const char *s, int cols)
+/* Copy whole code points as td_utf8_next() reads them (a malformed byte is
+ * one cell on its own), so the copy draws the same cells. */
+static size_t copy_cells(char *out, size_t cap, const char *s, int cols, int *used)
 {
-    if (!out || cap == 0)
-        return 0;
     size_t n = 0;
-    int used = 0;
-    /* Copy whole code points as td_utf8_next() reads them (a malformed byte
-     * is one cell on its own), so the copy draws the same cells. */
-    while (s && used < cols)
+    *used = 0;
+    while (s && *used < cols)
     {
         const char *start = s;
         if (td_utf8_next(&s) == 0)
@@ -134,8 +132,26 @@ int td_utf8_pad(char *out, size_t cap, const char *s, int cols)
             break;
         memcpy(out + n, start, len);
         n += len;
-        used++;
+        (*used)++;
     }
+    out[n] = '\0';
+    return n;
+}
+
+int td_utf8_copy(char *out, size_t cap, const char *s, int cols)
+{
+    if (!out || cap == 0)
+        return 0;
+    int used;
+    return (int)copy_cells(out, cap, s, cols, &used);
+}
+
+int td_utf8_pad(char *out, size_t cap, const char *s, int cols)
+{
+    if (!out || cap == 0)
+        return 0;
+    int used;
+    size_t n = copy_cells(out, cap, s, cols, &used);
     while (used < cols && n + 1 < cap)
     {
         out[n++] = ' ';
@@ -143,6 +159,19 @@ int td_utf8_pad(char *out, size_t cap, const char *s, int cols)
     }
     out[n] = '\0';
     return (int)n;
+}
+
+const char *td_utf8_skip(const char *s, int cols)
+{
+    if (!s)
+        return s;
+    for (int i = 0; i < cols; i++)
+    {
+        const char *before = s;
+        if (td_utf8_next(&s) == 0)
+            return before;
+    }
+    return s;
 }
 
 /* Start a new sequence with byte; returns 1 if it completed at once. */
