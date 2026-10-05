@@ -107,14 +107,20 @@ A successful build alone is not counted as a hardware test.
   the same way (the 179 KB in the 0.1.3 notes was an older figure); ESP32
   with PSRAM 155 KB + 3263 KB PSRAM; 4 MB ESP32 96 KB, Wi-Fi not
   connected.
-- Before publishing, the ESP32 with PSRAM was put on the official 0.1.3
-  image, to update to 0.1.4 through Software Update once it is out.
+- The first update over the air from one official release to the next:
+  the ESP32 with PSRAM on the official 0.1.3 image. After 0.1.4 was
+  published, *Check for official updates* showed "TinyDesk 0.1.4,
+  2026-10-05, 1.73 MB (newer)" and filled in the image; *Install*
+  downloaded it (1.73 MB) without asking (no built-in settings) and said
+  "Version 0.1.4 is installed. Restart to use it." After the restart it
+  runs 0.1.4 (the release build) from ota_1, confirmed itself, keeps
+  0.1.3 in ota_0 for a rollback, and has its files and its four board
+  settings in `/etc/board.conf`; every app opens as before.
 
 ## Not validated yet
 
 - The Editor's save and reopen on every board.
 - MQTT and Modbus with live devices.
-- Installing a newer official release over the air.
 - The Shell firmware on fresh boards.
 - Installations from the web installer
   (https://schikani.github.io/tinydesk-docs/install/) on every board it
