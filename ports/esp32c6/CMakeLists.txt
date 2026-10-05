@@ -20,11 +20,11 @@ list(APPEND EXTRA_COMPONENT_DIRS
     "${TD_ROOT}/ports/esp_idf/components")
 
 # The firmware version shown by Software Update and `ota status`.
-# Override for a test build: set TD_VERSION=0.1.4 before idf.py build.
+# Override for a test build: set TD_VERSION=0.1.5 before idf.py build.
 if(DEFINED ENV{TD_VERSION})
     set(PROJECT_VER "$ENV{TD_VERSION}")
 else()
-    set(PROJECT_VER "0.1.3")
+    set(PROJECT_VER "0.1.4")
 endif()
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(tinydesk)

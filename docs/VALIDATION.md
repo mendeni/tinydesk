@@ -75,6 +75,41 @@ A successful build alone is not counted as a hardware test.
 - Software Update on the 4 MB ESP32 shows the new explanation; internal RAM
   free on the C6 with LAN, Wi-Fi and SD: 133.7 KB.
 
+## 0.1.4
+
+- Long command lines: a host test drives the line editor into a VT
+  emulator at 20 columns (wrapping, Backspace and the arrows across rows,
+  the right margin, UTF-8, a coloured prompt, the width query with and
+  without an answer, type-ahead); the simulated desktop (tdsim) passes 8
+  scenarios; the Terminal window passes 7 on all three boards (the 80x25
+  boards wrap at the window's 76 columns, so the width comes from the
+  window). The standalone Shell on the 4 MB ESP32, over serial with a
+  40-column terminal: the width is asked and used, editing across two
+  wraps works, an unanswered query leaves nothing stray, and two commands
+  sent in one burst both run. Not on hardware: SSH, the Windows console.
+- Non-ASCII names: the Network list with multibyte, 4-byte and invalid
+  SSIDs (test_columns), Files and the Task Manager with `café.txt` and
+  `中文名.txt` on all three boards, the Network window after real scans,
+  desktop labels (test_wm; the C6's one-line icons and the WROVER's
+  two-line labels). In xterm.js double-width characters take two columns:
+  the columns after a name stay in place, but the character after each
+  wide one is hidden (TinyDesk draws one cell per character).
+- `board save`: test_board; on the 4 MB ESP32 with a test firmware that
+  had one built-in key: `board show` names it, `board save` writes it, and
+  the normal firmware (no built-in settings, like an official image) then
+  has it from `/etc/board.conf`. On the C6 (19 built-in settings)
+  Software Update asks before *Install* (*Cancel*: nothing saved or
+  installed) and `ota install` refuses; on the WROVER neither asks.
+- Every app opened one after another, then the Task Manager: 13, 12 and
+  11 apps as before, no restart.
+- Free RAM (About, idle desktop after start-up): ESP32-C6 with the release
+  configuration 167 KB with Wi-Fi, the same as 0.1.3 built and measured
+  the same way (the 179 KB in the 0.1.3 notes was an older figure); ESP32
+  with PSRAM 155 KB + 3263 KB PSRAM; 4 MB ESP32 96 KB, Wi-Fi not
+  connected.
+- Before publishing, the ESP32 with PSRAM was put on the official 0.1.3
+  image, to update to 0.1.4 through Software Update once it is out.
+
 ## Not validated yet
 
 - The Editor's save and reopen on every board.
