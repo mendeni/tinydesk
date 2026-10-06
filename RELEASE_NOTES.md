@@ -7,35 +7,30 @@ embedded shell. MQTT and Modbus apps connect the desktop to real projects.
 This release is a developer preview: expect rough edges, and please report
 what breaks.
 
-## New in 0.1.4
+## New in 0.1.5
 
-* **The first update you can install from Software Update:** boards
-  running 0.1.3 (ESP32-C6, ESP32 with PSRAM) find 0.1.4 with *Check for
-  official updates*, or tell you about it within a day.
-* **Your pins survive an official update.** If you built the firmware
-  with your own `board.conf`, its pins are built in, and an official
-  update (built without them) would start without Ethernet, SD card or
-  RS-485. Software Update now asks first: *Save and install* copies them
-  to `/etc/board.conf` (as `board save` does in the shell); `ota install`
-  refuses until they are saved.
-* **Non-ASCII names line up and stay whole:** Wi-Fi networks, files and
-  window titles with characters such as é, ☕ or 中 no longer push the
-  columns after them out of line (the signal bars overlapped the name),
-  and desktop icon labels, titles and dialogs never cut a character in
-  half.
-* **Long command lines** in the Terminal (and over SSH and serial)
-  wrap over several rows and stay editable; before, text was left behind
-  or doubled.
-* **Editor:** a file keeps its name when saved (on Linux the second Ctrl+S
-  asked for a name). **`mqtt status`** names the TLS handshake. Both are
-  contributions, with new tests for the widgets and the Editor.
-* **For contributors and people who build from source:** the ESP code
-  shared by the boards is in `ports/esp_idf`; the C sources are formatted
-  with clang-format 16, with a pre-commit hook (`pip install pre-commit`,
-  then `pre-commit install`); see `CONTRIBUTING.md`.
+* **New home:** the code is at github.com/tinydesk-project and the
+  documentation, installer and update information at
+  <https://tinydesk-project.github.io/>. Boards running 0.1.3 or 0.1.4
+  still find this update at the old address; from 0.1.5 on they check
+  the new one.
+* **Update information can move:** should the site move again, the old
+  update information can name the new address (`moved`), and boards
+  follow it from then on (HTTPS only; your own `update.url` still comes
+  first). `ota feed` shows the address in use and why, `ota feed reset`
+  forgets a moved one.
+* **Only root changes the network policy:** `network mode` and
+  `network autowifi` with a value need root; any user still sees them.
+* **Board configuration numbers** are decimal or `0x` hexadecimal; a
+  leading zero no longer means octal.
+* **For contributors:** `STANDARDS.md` in TinyDesk Shell sets out names,
+  code style, commands, board keys and release rules, also for
+  community ports.
 
-Also since 0.1.0: official updates in Software Update and fixes for
-boards without PSRAM (0.1.3), the SD card at `/sd` and in Files (0.1.2),
+Also since 0.1.0: Software Update offers to save built-in pins before
+an official update, non-ASCII names line up, long command lines wrap
+(0.1.4); official updates in Software Update and fixes for boards
+without PSRAM (0.1.3); the SD card at `/sd` and in Files (0.1.2);
 `ping -c`, MQTT over TLS in the PC programs, and `tdsh.exe` for Windows.
 
 ## Install

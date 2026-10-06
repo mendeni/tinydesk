@@ -2,7 +2,7 @@
 
 **A tiny board. A real desktop. Inside your terminal.**
 
-v0.1.4 · Developer preview.
+v0.1.5 · Developer preview.
 
 **[Install it from the browser](https://tinydesk-project.github.io/install/)**: flash an ESP32 (Chrome or
 Edge, no toolchain), or download the Windows and Linux programs. Then open

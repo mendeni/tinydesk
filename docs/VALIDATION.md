@@ -117,6 +117,35 @@ A successful build alone is not counted as a hardware test.
   0.1.3 in ota_0 for a rollback, and has its files and its four board
   settings in `/etc/board.conf`; every app opens as before.
 
+## 0.1.5
+
+- Update information that moves: on the ESP32 with PSRAM, a test firmware
+  whose built-in feed answered only `{"moved": "<the official esp32
+  feed>"}`: `ota official` followed the move and reported the official
+  0.1.4; `ota feed` then named the official feed, "(moved there by the
+  update information)", also after a restart; `ota feed reset` went back
+  to the built-in address. Not on hardware: a board key `update.url`
+  taking precedence over a move.
+- The release build reads the new site: on the ESP32 with PSRAM, `ota
+  feed` names `https://tinydesk-project.github.io/install/…` "(built in)",
+  and `ota official` reads it ("Installed 0.1.5 is newer than the newest
+  release (0.1.4)").
+- `network autowifi` and `network mode` as root on the ESP32 with PSRAM
+  and the 4 MB ESP32: shown and changed as before (and set back). Not on
+  hardware: the refusal for other users (both boards have only root).
+- PuTTY 0.83 on the ESP32 with PSRAM over serial, the window resized
+  five times between 640x480 and 1500x900 pixels: each time the desktop
+  fills the window, the taskbar is on the last row and the icons are laid
+  out again.
+- Every app opened one after another, then the Task Manager: ESP32 with
+  PSRAM 13 apps, 4 MB ESP32 12, no restart.
+- Free RAM (About, idle desktop after a restart): ESP32 with PSRAM 155 KB
+  + 3263 KB PSRAM, 4 MB ESP32 96 KB (Wi-Fi not connected), as in 0.1.4.
+- Idle desktop after that, then the shell: `uptime` 11 and 15 minutes, no
+  restart.
+- Not on hardware: the ESP32-C6 (the release build compiles; the board
+  keeps its own firmware until it updates from the published release).
+
 ## Not validated yet
 
 - The Editor's save and reopen on every board.
