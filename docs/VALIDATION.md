@@ -131,8 +131,9 @@ A successful build alone is not counted as a hardware test.
   and `ota official` reads it ("Installed 0.1.5 is newer than the newest
   release (0.1.4)").
 - `network autowifi` and `network mode` as root on the ESP32 with PSRAM
-  and the 4 MB ESP32: shown and changed as before (and set back). Not on
-  hardware: the refusal for other users (both boards have only root).
+  and the 4 MB ESP32: shown and changed as before (and set back). On the
+  ESP32-C6 after the update (checked by the owner): the non-root user
+  cannot change `network autowifi`.
 - PuTTY 0.83 on the ESP32 with PSRAM over serial, the window resized
   five times between 640x480 and 1500x900 pixels: each time the desktop
   fills the window, the taskbar is on the last row and the icons are laid
@@ -143,8 +144,9 @@ A successful build alone is not counted as a hardware test.
   + 3263 KB PSRAM, 4 MB ESP32 96 KB (Wi-Fi not connected), as in 0.1.4.
 - Idle desktop after that, then the shell: `uptime` 11 and 15 minutes, no
   restart.
-- Not on hardware: the ESP32-C6 (the release build compiles; the board
-  keeps its own firmware until it updates from the published release).
+- The ESP32-C6 on the owner's own build (labelled 0.1.3, 19 settings built
+  in): *Save and install* in Software Update saved its settings to
+  `/etc/board.conf` and installed the official 0.1.5 (done by the owner).
 - Release files: both published releases (TinyDesk Shell 7 files, TinyDesk
   19) match `SHA256SUMS.txt`; the update information on the new site and
   on the old one (`schikani.github.io/tinydesk-docs`) names 0.1.5 for the
