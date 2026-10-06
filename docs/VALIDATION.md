@@ -145,6 +145,18 @@ A successful build alone is not counted as a hardware test.
   restart.
 - Not on hardware: the ESP32-C6 (the release build compiles; the board
   keeps its own firmware until it updates from the published release).
+- Release files: both published releases (TinyDesk Shell 7 files, TinyDesk
+  19) match `SHA256SUMS.txt`; the update information on the new site and
+  on the old one (`schikani.github.io/tinydesk-docs`) names 0.1.5 for the
+  ESP32-C6 and the ESP32, and both images match their size and SHA-256.
+- The bridge from the old site: the ESP32 with PSRAM on the official 0.1.4
+  (which reads the old address). *Check for official updates* showed
+  "TinyDesk 0.1.5, 2026-10-06, 1.73 MB (newer)" from the old site;
+  *Install* downloaded it and said "Version 0.1.5 is installed. Restart to
+  use it." After the restart it runs the release build from ota_0,
+  confirmed itself, keeps 0.1.4 in ota_1, reads the new site (`ota feed`:
+  built in), keeps its four board settings in `/etc/board.conf`, and all
+  13 apps open.
 
 ## Not validated yet
 
