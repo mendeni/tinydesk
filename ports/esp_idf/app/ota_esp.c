@@ -288,13 +288,66 @@ static bool is_url(const char *s)
 
 /* ---------------------------------------------------- official releases */
 
-static void feed_url(char *out, size_t cap)
+/* Update information can move: a feed that says "moved": "<https URL of the
+ * feed at its new address>" makes the board keep that address in NVS
+ * (td_update/feed) and read it from then on, so later firmware keeps
+ * getting updates even if the site's address changes again. */
+static void moved_feed(char *out, size_t cap)
+{
+    nvs_handle_t h;
+    out[0] = '\0';
+    if (nvs_open("td_update", NVS_READONLY, &h) != ESP_OK)
+        return;
+    size_t n = cap;
+    if (nvs_get_str(h, "feed", out, &n) != ESP_OK)
+        out[0] = '\0';
+    nvs_close(h);
+}
+
+static void set_moved_feed(const char *url)
+{
+    nvs_handle_t h;
+    if (nvs_open("td_update", NVS_READWRITE, &h) != ESP_OK)
+        return;
+    if (url && url[0])
+        nvs_set_str(h, "feed", url);
+    else
+        nvs_erase_key(h, "feed");
+    nvs_commit(h);
+    nvs_close(h);
+}
+
+/* Where the update information is read, first that applies: the board key
+ * update.url (the user's own choice), an address a feed moved to, the
+ * official site. `origin` (may be NULL) says which. */
+static void feed_url_from(char *out, size_t cap, const char **origin)
 {
     const char *u = tdsh_board_get("update.url");
+    char moved[200];
+    moved_feed(moved, sizeof(moved));
+    const char *why;
     if (u && is_url(u))
+    {
         snprintf(out, cap, "%s", u);
+        why = "board key update.url";
+    }
+    else if (is_url(moved))
+    {
+        snprintf(out, cap, "%s", moved);
+        why = "moved there by the update information";
+    }
     else
+    {
         snprintf(out, cap, "%supdate-desktop-%s.json", UPDATE_SITE, UPDATE_BOARD);
+        why = "built in";
+    }
+    if (origin)
+        *origin = why;
+}
+
+static void feed_url(char *out, size_t cap)
+{
+    feed_url_from(out, cap, NULL);
 }
 
 /* "0.1.10" > "0.1.9": the first three numbers, anything after them ignored. */
@@ -376,18 +429,48 @@ static const char *json_str(const cJSON *o, const char *key)
     return cJSON_IsString(v) && v->valuestring ? v->valuestring : "";
 }
 
+/* A feed's "moved" address is followed only from a feed read over HTTPS, to
+ * another HTTPS address, and not when the user set update.url. Returns true
+ * (and the new address in url) when the board should read it now. */
+static bool follow_move(const cJSON *j, char *url, size_t cap)
+{
+    const char *moved = j ? json_str(j, "moved") : "";
+    const char *own = tdsh_board_get("update.url");
+    if (!moved[0] || (own && is_url(own)))
+        return false;
+    if (strncmp(url, "https://", 8) != 0 || strncmp(moved, "https://", 8) != 0 || strlen(moved) >= cap ||
+        strcmp(moved, url) == 0)
+        return false;
+    set_moved_feed(moved);
+    ESP_LOGI(TAG, "update information moved to %s", moved);
+    snprintf(url, cap, "%s", moved);
+    return true;
+}
+
 static void from_feed(void)
 {
     char url[200], err[96] = "";
     feed_url(url, sizeof(url));
     td_ota_release_t r = {0};
     char *buf = malloc(FEED_MAX);
-    int n = buf ? http_get_small(url, buf, FEED_MAX, err, sizeof(err)) : -1;
-    if (!buf)
-        snprintf(err, sizeof(err), "Not enough memory to check.");
-    cJSON *j = n > 0 ? cJSON_Parse(buf) : NULL;
-    if (n > 0 && !j)
-        snprintf(err, sizeof(err), "The update information is not valid JSON.");
+    cJSON *j = NULL;
+    for (int hop = 0; hop < 2; hop++)
+    {
+        err[0] = '\0';
+        int n = buf ? http_get_small(url, buf, FEED_MAX, err, sizeof(err)) : -1;
+        if (!buf)
+            snprintf(err, sizeof(err), "Not enough memory to check.");
+        j = n > 0 ? cJSON_Parse(buf) : NULL;
+        if (n > 0 && !j)
+            snprintf(err, sizeof(err), "The update information is not valid JSON.");
+        if (hop == 0 && follow_move(j, url, sizeof(url)))
+        {
+            cJSON_Delete(j); /* read it at its new address now */
+            j = NULL;
+            continue;
+        }
+        break;
+    }
     const char *ver = j ? json_str(j, "version") : "";
     const char *image = j ? json_str(j, "image") : "";
     if (j && (!ver[0] || !image[0]))
@@ -798,6 +881,16 @@ static int cmd_ota(tdsh_session_t *session, int argc, char **argv)
         }
         return rc;
     }
+    if (!strcmp(op, "feed") && (argc == 2 || (argc == 3 && !strcmp(argv[2], "reset"))))
+    {
+        if (argc == 3)
+            set_moved_feed(NULL); /* back to the built-in address */
+        char url[200];
+        const char *origin = "";
+        feed_url_from(url, sizeof(url), &origin);
+        printf("Update information: %s\n(%s)\n", url, origin);
+        return 0;
+    }
     if (!strcmp(op, "notify"))
     {
         if (argc == 3 && (!strcmp(argv[2], "on") || !strcmp(argv[2], "off")))
@@ -843,6 +936,8 @@ static int cmd_ota(tdsh_session_t *session, int argc, char **argv)
            "  ota status                    installed version, slots, last result\n"
            "  ota official                  look up the newest official release\n"
            "  ota notify [on|off]           daily check and notice (on: tell again)\n"
+           "  ota feed [reset]              where the update information is read (reset:\n"
+           "                                forget an address it moved to)\n"
            "  ota check <url|file>          show the version of an update\n"
            "  ota install [-f] <url|file>   install it (then: ota restart); -f: even with\n"
            "                                board settings that only this firmware has\n"
@@ -853,7 +948,7 @@ static int cmd_ota(tdsh_session_t *session, int argc, char **argv)
 
 static const tdsh_command_t s_cmd = {
     "ota",
-    "ota <status|official|notify|check|install|cancel|restart|rollback> ...",
+    "ota <status|official|feed|notify|check|install|cancel|restart|rollback> ...",
     "Firmware update (OTA)",
     cmd_ota,
     TDSH_CMD_ROOT_ONLY,
