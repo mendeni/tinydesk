@@ -59,7 +59,7 @@ static volatile bool s_busy;
 static int64_t s_start_us;
 
 /* The official update feed. */
-#define UPDATE_SITE "https://schikani.github.io/tinydesk-docs/install/"
+#define UPDATE_SITE "https://tinydesk-project.github.io/install/"
 #if CONFIG_IDF_TARGET_ESP32C6
 #define UPDATE_BOARD "esp32c6"
 #else

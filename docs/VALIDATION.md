@@ -123,7 +123,7 @@ A successful build alone is not counted as a hardware test.
 - MQTT and Modbus with live devices.
 - The Shell firmware on fresh boards.
 - Installations from the web installer
-  (https://schikani.github.io/tinydesk-docs/install/) on every board it
+  (https://tinydesk-project.github.io/install/) on every board it
   offers, and installations by other people.
 
 The release process is in [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md).

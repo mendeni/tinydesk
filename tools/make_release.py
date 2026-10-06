@@ -172,7 +172,7 @@ def package_firmware(out, edition, title, version, builds):
                 "image": "firmware/" + app,
                 "size": os.path.getsize(app_src),
                 "sha256": sha256(app_src),
-                "notes": "https://github.com/schikani/tinydesk/releases/tag/v%s" % version,
+                "notes": "https://github.com/tinydesk-project/tinydesk/releases/tag/v%s" % version,
             }
             with open(os.path.join(out, "update-%s-%s.json" % (edition, board)), "w") as f:
                 json.dump(feed, f, indent=2)

@@ -1,9 +1,9 @@
 # Release checklist
 
-Source lives in `schikani/tinydesk` with `schikani/tinydesk-shell` pinned as a
+Source lives in `tinydesk-project/tinydesk` with `tinydesk-project/tinydesk-shell` pinned as a
 submodule. The documentation and web installer live in
-`schikani/tinydesk-docs` and are published with GitHub Pages at
-https://schikani.github.io/tinydesk-docs/.
+`tinydesk-project/tinydesk-project.github.io` and are published with GitHub Pages at
+https://tinydesk-project.github.io/.
 
 ## Tests before a release
 
@@ -53,6 +53,13 @@ https://schikani.github.io/tinydesk-docs/.
    (Actions, Run workflow): `tools/fetch_release.py` copies the newest
    published release into the installer after checking `SHA256SUMS.txt`, and
    `tools/check_links.py` checks the links.
+   Boards running 0.1.3 or 0.1.4 look for updates at the old address,
+   `https://schikani.github.io/tinydesk-docs/install/`, served by the
+   repository `schikani/tinydesk-docs`. Run its *GitHub Pages* workflow too
+   after every release (it takes the release from `tinydesk-project/tinydesk`),
+   so those boards are told about it. Never delete or rename that repository,
+   or create `tinydesk` or `tinydesk-shell` under `schikani` (that breaks
+   GitHub's redirects to `tinydesk-project`).
 6. Install from the live site on each board the installer offers. ESP Web
    Tools requires HTTPS and resolves firmware paths relative to the
    manifest:

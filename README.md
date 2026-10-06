@@ -4,10 +4,10 @@
 
 v0.1.4 · Developer preview.
 
-**[Install it from the browser](https://schikani.github.io/tinydesk-docs/install/)**: flash an ESP32 (Chrome or
+**[Install it from the browser](https://tinydesk-project.github.io/install/)**: flash an ESP32 (Chrome or
 Edge, no toolchain), or download the Windows and Linux programs. Then open
-the board in the **[web terminal](https://schikani.github.io/tinydesk-docs/console/)**, or in PuTTY.
-Full **[documentation](https://schikani.github.io/tinydesk-docs/)**. To build from source, see below.
+the board in the **[web terminal](https://tinydesk-project.github.io/console/)**, or in PuTTY.
+Full **[documentation](https://tinydesk-project.github.io/)**. To build from source, see below.
 
 ![Four TinyDesk windows opened, dragged and resized side by side on a physical ESP32, then About](docs/media/desktop-demo-esp32.gif)
 
@@ -22,7 +22,7 @@ sequences and reads the keyboard and mouse back from the terminal. There is
 no display hardware: open a UTF-8 terminal with ANSI/VT cursor control
 and xterm mouse reporting (for example, configured PuTTY) on the board's serial
 port and you get a desktop, with a full shell,
-[TinyDesk Shell](https://github.com/schikani/tinydesk-shell), in a
+[TinyDesk Shell](https://github.com/tinydesk-project/tinydesk-shell), in a
 Terminal window. The core is portable C11; ports exist for ESP32 boards
 (ESP-IDF), Linux and Windows, and a new target needs four functions.
 
@@ -41,7 +41,7 @@ Terminal window. The core is portable C11; ports exist for ESP32 boards
 * Shell scripts (`.tdsh`): variables, `if`/`while`/`for`, functions, pipes
   and redirection, run from the Terminal or with right-click → Run on the
   desktop. Language reference: `docs/SCRIPTING.md` in
-  [TinyDesk Shell](https://github.com/schikani/tinydesk-shell).
+  [TinyDesk Shell](https://github.com/tinydesk-project/tinydesk-shell).
 * Optional, root-only desktop takeover over unencrypted Telnet. SSH provides
   an encrypted shell and SFTP, not the windowed desktop. FTP, SMB mounts,
   Wi-Fi and W6100 Ethernet are available from the shell.
@@ -55,11 +55,11 @@ Terminal window. The core is portable C11; ports exist for ESP32 boards
 | Classic ESP32, 4 MB | PSRAM optional | USB-UART, 921600 baud; 80×25, no SSH server or OTA |
 | PC | Linux, Windows with MinGW, or macOS | Compatible terminal; host simulator for development |
 
-[TinyDesk Shell](https://github.com/schikani/tinydesk-shell) also runs as
+[TinyDesk Shell](https://github.com/tinydesk-project/tinydesk-shell) also runs as
 standalone firmware or a POSIX host program. Every
-[release](https://github.com/schikani/tinydesk/releases) has the firmware
+[release](https://github.com/tinydesk-project/tinydesk/releases) has the firmware
 images for both editions, the PC programs and `SHA256SUMS.txt`; the
-[web installer](https://schikani.github.io/tinydesk-docs/install/) uses the same files.
+[web installer](https://tinydesk-project.github.io/install/) uses the same files.
 
 ### Community ports
 
@@ -84,7 +84,7 @@ requires a local reboot; disconnecting does not restore recovery privileges.
 The shell is a git submodule, so clone with `--recursive`:
 
 ```bash
-git clone --recursive https://github.com/schikani/tinydesk.git
+git clone --recursive https://github.com/tinydesk-project/tinydesk.git
 cd tinydesk
 ```
 
@@ -119,7 +119,7 @@ without a rebuild. See
 | Repository | What it is | Licence |
 | --- | --- | --- |
 | **tinydesk** (this one) | the desktop, apps, ports and tools | MIT |
-| [**tinydesk-shell**](https://github.com/schikani/tinydesk-shell) | TinyDesk Shell (`tdsh`): the shell, its ESP-IDF services and host port; included here as the submodule `third_party/tdsh` | MIT, with third-party parts under their own licences |
+| [**tinydesk-shell**](https://github.com/tinydesk-project/tinydesk-shell) | TinyDesk Shell (`tdsh`): the shell, its ESP-IDF services and host port; included here as the submodule `third_party/tdsh` | MIT, with third-party parts under their own licences |
 
 ## Licence
 

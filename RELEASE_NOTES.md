@@ -40,9 +40,9 @@ boards without PSRAM (0.1.3), the SD card at `/sd` and in Files (0.1.2),
 
 ## Install
 
-* **ESP boards, from the browser:** <https://schikani.github.io/tinydesk-docs/install/>
+* **ESP boards, from the browser:** <https://tinydesk-project.github.io/install/>
   (Chrome or Edge on a computer). Pick the edition and your exact board.
-* **Open the board in the browser:** <https://schikani.github.io/tinydesk-docs/console/>
+* **Open the board in the browser:** <https://tinydesk-project.github.io/console/>
   (a real terminal with mouse support; the installer's own Logs & Console
   cannot show the desktop).
 * **Without the browser:** each `*-factory.bin` below is flashed at offset 0

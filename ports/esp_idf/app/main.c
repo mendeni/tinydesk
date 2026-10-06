@@ -361,7 +361,7 @@ static void fill_sysinfo(void)
             "(4 MB layout), and an update needs a second one to download into.\n"
             "\n"
             "Install the new release with the web installer instead:\n"
-            "  https://schikani.github.io/tinydesk-docs/install/\n"
+            "  https://tinydesk-project.github.io/install/\n"
             "Leave \"Erase device\" off: your files stay; users, Wi-Fi networks\n"
             "and passwords start fresh.";
     }
