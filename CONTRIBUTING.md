@@ -25,6 +25,10 @@ revision when reporting a problem.
 6. Keep your own board out of it: pins go in `ports/*/board.conf` (ignored by git),
    never in code. New hardware keys go, commented out, into both `board.example.conf` files.
 
+Names, code style, commands, board keys and release files follow the
+[standards](https://github.com/tinydesk-project/tinydesk-shell/blob/main/STANDARDS.md), kept in TinyDesk Shell
+(`third_party/tdsh/STANDARDS.md`) for both repositories.
+
 Shell changes are made and pushed in `tinydesk-shell` first; then the new
 submodule commit is recorded here.
 
