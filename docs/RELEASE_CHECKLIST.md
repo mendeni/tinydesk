@@ -53,11 +53,13 @@ https://tinydesk-project.github.io/.
    (Actions, Run workflow): `tools/fetch_release.py` copies the newest
    published release into the installer after checking `SHA256SUMS.txt`, and
    `tools/check_links.py` checks the links.
-   Boards running 0.1.3 or 0.1.4 look for updates at the old address,
-   `https://schikani.github.io/tinydesk-docs/install/`, served by the
-   repository `schikani/tinydesk-docs`. Run its *GitHub Pages* workflow too
-   after every release (it takes the release from `tinydesk-project/tinydesk`),
-   so those boards are told about it. Never delete or rename that repository,
+   **Once, after publishing 0.1.5:** boards running 0.1.3 or 0.1.4 look for
+   updates at the old address, `https://schikani.github.io/tinydesk-docs/install/`
+   (repository `schikani/tinydesk-docs`). Run that repository's *GitHub
+   Pages* workflow once, so it serves 0.1.5 (update information and images),
+   then archive the repository on GitHub: its site stays online, read-only.
+   Those boards update to 0.1.5, which reads the new address, and from there
+   to every later release. Never delete or rename `schikani/tinydesk-docs`,
    or create `tinydesk` or `tinydesk-shell` under `schikani` (that breaks
    GitHub's redirects to `tinydesk-project`).
 6. Install from the live site on each board the installer offers. ESP Web
