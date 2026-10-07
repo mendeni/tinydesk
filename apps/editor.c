@@ -30,7 +30,12 @@
 #ifndef TD_EDITOR_UNDO
 #define TD_EDITOR_UNDO 6144      /* bytes of undo text kept */
 #endif
-#define UNDO_OPS        128
+#ifndef TD_EDITOR_UNDO_OPS
+#define TD_EDITOR_UNDO_OPS 128   /* undo records kept, 20 bytes each */
+#endif
+#if TD_EDITOR_UNDO_OPS < 1
+#error "TD_EDITOR_UNDO_OPS must be at least 1"
+#endif
 #define PATH_LEN        TD_PATH_MAX
 #define DOUBLE_CLICK_MS 400
 
@@ -55,7 +60,7 @@ typedef enum
 
 typedef struct
 {
-    undo_op_t ops[UNDO_OPS];
+    undo_op_t ops[TD_EDITOR_UNDO_OPS];
     int n;               /* ops recorded */
     int top;             /* ops applied; ops[top..n) can be redone */
     char pool[TD_EDITOR_UNDO];
@@ -405,7 +410,7 @@ static void undo_record(bool ins, int pos, const char *text, int len, int cur_be
         }
     }
 
-    while (u->n > 0 && (u->n >= UNDO_OPS || u->used + len > TD_EDITOR_UNDO))
+    while (u->n > 0 && (u->n >= TD_EDITOR_UNDO_OPS || u->used + len > TD_EDITOR_UNDO))
     {
         if (u->ops[0].group == u->group)
         {    /* only this action is left */
